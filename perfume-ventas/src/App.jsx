@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
-import { ShoppingBag, CalendarDays, BarChart3, Settings, FlaskConical } from 'lucide-react'
+import { ShoppingBag, CalendarDays, BarChart3, Settings, FlaskConical, Boxes } from 'lucide-react'
 import NuevaVenta from './pages/NuevaVenta.jsx'
 import VentasHoy from './pages/VentasHoy.jsx'
 import Resumen from './pages/Resumen.jsx'
 import Configuracion from './pages/Configuracion.jsx'
+import Stock from './pages/Stock.jsx'
 import SetupModal from './components/SetupModal.jsx'
 
 const TABS = [
   { id: 'venta', label: 'Nueva Venta', icon: ShoppingBag },
   { id: 'hoy', label: 'Ventas del Día', icon: CalendarDays },
   { id: 'resumen', label: 'Resumen', icon: BarChart3 },
+  { id: 'stock', label: 'Stock', icon: Boxes },
   { id: 'config', label: 'Configuración', icon: Settings },
 ]
 
@@ -26,7 +28,7 @@ export default function App() {
     }
   }, [])
 
-  const ActivePage = { venta: NuevaVenta, hoy: VentasHoy, resumen: Resumen, config: Configuracion }[tab]
+  const ActivePage = { venta: NuevaVenta, hoy: VentasHoy, resumen: Resumen, stock: Stock, config: Configuracion }[tab]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
