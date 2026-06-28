@@ -39,6 +39,8 @@ export default function Resumen() {
   const totalIngresos = ventas.reduce((s, v) => s + Number(v.total), 0)
   const totalTransacciones = ventas.length
   const totalDescuentos = ventas.flatMap(v => v.venta_items || []).reduce((s, i) => s + Number(i.descuento) * i.cantidad, 0)
+  const totalCosto = ventas.flatMap(v => v.venta_items || []).reduce((s, i) => s + Number(i.precio_compra || 0) * i.cantidad, 0)
+  const totalGanancia = totalIngresos - totalCosto
 
   // Agrupado por método de pago
   const porMetodo = ventas.reduce((acc, v) => {
@@ -119,9 +121,11 @@ export default function Resumen() {
       ) : (
         <>
           {/* KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '28px' }}>
             {[
               { icon: TrendingUp, label: 'Ingresos totales', value: `S/ ${totalIngresos.toFixed(2)}`, color: 'var(--gold)' },
+              { icon: Package, label: 'Ganancia neta', value: `S/ ${totalGanancia.toFixed(2)}`, color: 'var(--success)' },
+              { icon: Package, label: 'Costo total', value: `S/ ${totalCosto.toFixed(2)}`, color: 'var(--text-secondary)' },
               { icon: Package, label: 'Transacciones', value: totalTransacciones, color: 'var(--text-primary)' },
               { icon: Tag, label: 'Descuentos dados', value: `S/ ${totalDescuentos.toFixed(2)}`, color: 'var(--danger)' },
             ].map(({ icon: Icon, label, value, color }) => (
@@ -130,7 +134,7 @@ export default function Resumen() {
                   <Icon size={15} color="var(--text-muted)" />
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
                 </div>
-                <div style={{ fontSize: '24px', fontWeight: 700, color }}>{value}</div>
+                <div style={{ fontSize: '22px', fontWeight: 700, color }}>{value}</div>
               </div>
             ))}
           </div>

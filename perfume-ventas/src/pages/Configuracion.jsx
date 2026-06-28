@@ -10,7 +10,7 @@ export default function Configuracion() {
 
   // Estado formulario nuevo/editar producto
   const [editando, setEditando] = useState(null) // null | 'nuevo' | producto.id
-  const [form, setForm] = useState({ nombre: '', categoria: 'Decant', precio: '' })
+  const [form, setForm] = useState({ nombre: '', categoria: 'Decant', precio: '', precio_compra: '', stock: '' })
 
   // Ventas para editar
   const [ventas, setVentas] = useState([])
@@ -44,12 +44,12 @@ export default function Configuracion() {
 
   // --- PRODUCTOS ---
   function iniciarNuevo() {
-    setForm({ nombre: '', categoria: 'Decant', precio: '' })
+    setForm({ nombre: '', categoria: 'Decant', precio: '', precio_compra: '', stock: '' })
     setEditando('nuevo')
   }
 
   function iniciarEdicion(producto) {
-    setForm({ nombre: producto.nombre, categoria: producto.categoria, precio: producto.precio })
+    setForm({ nombre: producto.nombre, categoria: producto.categoria, precio: producto.precio, precio_compra: producto.precio_compra || '', stock: producto.stock || '' })
     setEditando(producto.id)
   }
 
@@ -74,6 +74,8 @@ export default function Configuracion() {
         nombre: form.nombre.trim(),
         categoria: form.categoria,
         precio,
+        precio_compra: parseFloat(form.precio_compra) || 0,
+        stock: parseInt(form.stock) || 0,
         activo: true,
       })
       if (error) { toast.error('Error creando producto'); return }
@@ -83,6 +85,8 @@ export default function Configuracion() {
         nombre: form.nombre.trim(),
         categoria: form.categoria,
         precio,
+        precio_compra: parseFloat(form.precio_compra) || 0,
+        stock: parseInt(form.stock) || 0,
       }).eq('id', editando)
       if (error) { toast.error('Error actualizando producto'); return }
       toast.success('Producto actualizado')
@@ -196,7 +200,7 @@ export default function Configuracion() {
               <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '14px', color: 'var(--gold)' }}>
                 {editando === 'nuevo' ? 'Nuevo producto' : 'Editar producto'}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '10px', alignItems: 'end' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '10px', alignItems: 'end' }}>
                 <div>
                   <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Nombre</label>
                   <input
@@ -208,7 +212,7 @@ export default function Configuracion() {
                     autoFocus
                   />
                 </div>
-                <div style={{ minWidth: '130px' }}>
+                <div style={{ minWidth: '110px' }}>
                   <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Categoría</label>
                   <select value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} style={{ fontSize: '13px' }}>
                     <option>Decant</option>
@@ -216,8 +220,20 @@ export default function Configuracion() {
                     <option>Accesorio</option>
                   </select>
                 </div>
-                <div style={{ minWidth: '110px' }}>
-                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Precio S/</label>
+                <div style={{ minWidth: '100px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Costo S/</label>
+                  <input
+                    type="number"
+                    value={form.precio_compra}
+                    onChange={e => setForm({ ...form, precio_compra: e.target.value })}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.50"
+                    style={{ fontSize: '13px' }}
+                  />
+                </div>
+                <div style={{ minWidth: '100px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Venta S/</label>
                   <input
                     type="number"
                     value={form.precio}
@@ -225,6 +241,17 @@ export default function Configuracion() {
                     placeholder="0.00"
                     min="0"
                     step="0.50"
+                    style={{ fontSize: '13px' }}
+                  />
+                </div>
+                <div style={{ minWidth: '80px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Stock</label>
+                  <input
+                    type="number"
+                    value={form.stock}
+                    onChange={e => setForm({ ...form, stock: e.target.value })}
+                    placeholder="0"
+                    min="0"
                     style={{ fontSize: '13px' }}
                   />
                 </div>
@@ -250,7 +277,10 @@ export default function Configuracion() {
                   <tr style={{ background: 'var(--surface-raised)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
                     <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 500 }}>Producto</th>
                     <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 500 }}>Categoría</th>
-                    <th style={{ textAlign: 'right', padding: '10px 16px', fontWeight: 500 }}>Precio</th>
+                    <th style={{ textAlign: 'right', padding: '10px 16px', fontWeight: 500 }}>Costo</th>
+                    <th style={{ textAlign: 'right', padding: '10px 16px', fontWeight: 500 }}>Venta</th>
+                    <th style={{ textAlign: 'right', padding: '10px 16px', fontWeight: 500 }}>Ganancia</th>
+                    <th style={{ textAlign: 'center', padding: '10px 16px', fontWeight: 500 }}>Stock</th>
                     <th style={{ textAlign: 'center', padding: '10px 16px', fontWeight: 500 }}>Estado</th>
                     <th style={{ padding: '10px 16px' }}></th>
                   </tr>
@@ -259,13 +289,20 @@ export default function Configuracion() {
                   {productosFiltrados.map(p => (
                     <tr key={p.id} style={{ borderTop: '1px solid var(--border)', opacity: p.activo ? 1 : 0.5 }}>
                       <td style={{ padding: '11px 16px', fontSize: '13px' }}>
-                        {editando === p.id ? (
-                          <input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} style={{ fontSize: '13px' }} />
-                        ) : p.nombre}
+                        {p.nombre}
                       </td>
                       <td style={{ padding: '11px 16px', fontSize: '12px', color: 'var(--text-secondary)' }}>{p.categoria}</td>
+                      <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        S/ {Number(p.precio_compra || 0).toFixed(2)}
+                      </td>
                       <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: '13px', fontWeight: 600, color: 'var(--gold)' }}>
                         S/ {Number(p.precio).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: '13px', color: 'var(--success)' }}>
+                        S/ {(Number(p.precio) - Number(p.precio_compra || 0)).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: p.stock === 0 ? 'var(--danger)' : p.stock <= 3 ? 'var(--warning)' : 'var(--text-primary)' }}>
+                        {p.stock ?? 0}
                       </td>
                       <td style={{ padding: '11px 16px', textAlign: 'center' }}>
                         <span style={{

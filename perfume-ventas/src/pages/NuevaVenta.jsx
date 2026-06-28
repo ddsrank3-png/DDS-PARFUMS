@@ -98,6 +98,13 @@ export default function NuevaVenta() {
       toast.error('Agrega al menos un producto')
       return
     }
+    // Verificar stock suficiente
+    for (const item of carrito) {
+      if (item.producto.stock !== null && item.producto.stock < item.cantidad) {
+        toast.error(`Stock insuficiente para ${item.producto.nombre} (disponible: ${item.producto.stock})`)
+        return
+      }
+    }
     setGuardando(true)
     try {
       // Crear venta
@@ -124,15 +131,27 @@ export default function NuevaVenta() {
         descuento: item.descuento,
         cantidad: item.cantidad,
         subtotal: item.precioFinal * item.cantidad,
+        precio_compra: item.producto.precio_compra || 0,
       }))
 
       const { error: itemsError } = await supabase.from('venta_items').insert(items)
       if (itemsError) throw itemsError
 
+      // Descontar stock
+      for (const item of carrito) {
+        if (item.producto.stock !== null) {
+          await supabase
+            .from('productos')
+            .update({ stock: Math.max(0, item.producto.stock - item.cantidad) })
+            .eq('id', item.producto.id)
+        }
+      }
+
       toast.success(`Venta registrada — S/ ${total.toFixed(2)}`)
       setCarrito([])
       setNotas('')
       setMetodoPago('Efectivo')
+      cargarProductos()
     } catch (err) {
       toast.error('Error registrando venta: ' + err.message)
     } finally {
@@ -207,6 +226,9 @@ export default function NuevaVenta() {
                 </div>
                 <div style={{ fontSize: '15px', color: 'var(--gold)', fontWeight: 600 }}>
                   S/ {producto.precio.toFixed(2)}
+                </div>
+                <div style={{ fontSize: '11px', marginTop: '4px', color: producto.stock === 0 ? 'var(--danger)' : producto.stock <= 3 ? 'var(--warning)' : 'var(--text-muted)' }}>
+                  {producto.stock === 0 ? '⚠ Sin stock' : `Stock: ${producto.stock}`}
                 </div>
                 {enCarrito && (
                   <div style={{
