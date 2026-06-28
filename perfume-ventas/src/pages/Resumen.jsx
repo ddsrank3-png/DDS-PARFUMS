@@ -12,6 +12,7 @@ export default function Resumen() {
   const [desde, setDesde] = useState(getFirstDayOfMonth())
   const [hasta, setHasta] = useState(new Date().toISOString().split('T')[0])
   const [ventas, setVentas] = useState([])
+  const [gastos, setGastos] = useState([])
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
@@ -20,18 +21,13 @@ export default function Resumen() {
 
   async function cargarResumen() {
     setCargando(true)
-    const { data, error } = await supabase
-      .from('ventas')
-      .select(`*, venta_items(*)`)
-      .gte('fecha', desde)
-      .lte('fecha', hasta)
-      .order('fecha', { ascending: false })
-
-    if (error) {
-      toast.error('Error cargando resumen')
-    } else {
-      setVentas(data || [])
-    }
+    const [ventasRes, gastosRes] = await Promise.all([
+      supabase.from('ventas').select(`*, venta_items(*)`).gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false }),
+      supabase.from('gastos').select('*').gte('fecha', desde).lte('fecha', hasta),
+    ])
+    if (ventasRes.error) toast.error('Error cargando resumen')
+    else setVentas(ventasRes.data || [])
+    if (!gastosRes.error) setGastos(gastosRes.data || [])
     setCargando(false)
   }
 
@@ -40,7 +36,8 @@ export default function Resumen() {
   const totalTransacciones = ventas.length
   const totalDescuentos = ventas.flatMap(v => v.venta_items || []).reduce((s, i) => s + Number(i.descuento) * i.cantidad, 0)
   const totalCosto = ventas.flatMap(v => v.venta_items || []).reduce((s, i) => s + Number(i.precio_compra || 0) * i.cantidad, 0)
-  const totalGanancia = totalIngresos - totalCosto
+  const totalGastosOp = gastos.reduce((s, g) => s + Number(g.monto), 0)
+  const totalGanancia = totalIngresos - totalCosto - totalGastosOp
 
   // Agrupado por método de pago
   const porMetodo = ventas.reduce((acc, v) => {
@@ -124,10 +121,11 @@ export default function Resumen() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '28px' }}>
             {[
               { icon: TrendingUp, label: 'Ingresos totales', value: `S/ ${totalIngresos.toFixed(2)}`, color: 'var(--gold)' },
-              { icon: Package, label: 'Ganancia neta', value: `S/ ${totalGanancia.toFixed(2)}`, color: 'var(--success)' },
-              { icon: Package, label: 'Costo total', value: `S/ ${totalCosto.toFixed(2)}`, color: 'var(--text-secondary)' },
+              { icon: Package, label: 'Ganancia neta', value: `S/ ${totalGanancia.toFixed(2)}`, color: totalGanancia >= 0 ? 'var(--success)' : 'var(--danger)' },
+              { icon: Package, label: 'Costo productos', value: `S/ ${totalCosto.toFixed(2)}`, color: 'var(--text-secondary)' },
+              { icon: Tag, label: 'Gastos operativos', value: `S/ ${totalGastosOp.toFixed(2)}`, color: 'var(--danger)' },
               { icon: Package, label: 'Transacciones', value: totalTransacciones, color: 'var(--text-primary)' },
-              { icon: Tag, label: 'Descuentos dados', value: `S/ ${totalDescuentos.toFixed(2)}`, color: 'var(--danger)' },
+              { icon: Tag, label: 'Descuentos dados', value: `S/ ${totalDescuentos.toFixed(2)}`, color: 'var(--warning)' },
             ].map(({ icon: Icon, label, value, color }) => (
               <div key={label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
