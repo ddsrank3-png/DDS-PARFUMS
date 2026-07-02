@@ -10,7 +10,7 @@ export default function Configuracion() {
 
   // Estado formulario nuevo/editar producto
   const [editando, setEditando] = useState(null) // null | 'nuevo' | producto.id
-  const [form, setForm] = useState({ nombre: '', categoria: 'Decant', precio: '', precio_compra: '', stock: '' })
+  const [form, setForm] = useState({ nombre: '', categoria: 'Decant', tipo: 'Sellado', precio: '', precio_compra: '', stock: '' })
 
   // Ventas para editar
   const [ventas, setVentas] = useState([])
@@ -44,12 +44,12 @@ export default function Configuracion() {
 
   // --- PRODUCTOS ---
   function iniciarNuevo() {
-    setForm({ nombre: '', categoria: 'Decant', precio: '', precio_compra: '', stock: '' })
+    setForm({ nombre: '', categoria: 'Decant', tipo: 'Sellado', precio: '', precio_compra: '', stock: '' })
     setEditando('nuevo')
   }
 
   function iniciarEdicion(producto) {
-    setForm({ nombre: producto.nombre, categoria: producto.categoria, precio: producto.precio, precio_compra: producto.precio_compra || '', stock: producto.stock || '' })
+    setForm({ nombre: producto.nombre, categoria: producto.categoria, tipo: producto.tipo || 'Sellado', precio: producto.precio, precio_compra: producto.precio_compra || '', stock: producto.stock || '' })
     setEditando(producto.id)
   }
 
@@ -74,6 +74,7 @@ export default function Configuracion() {
         nombre: form.nombre.trim(),
         categoria: form.categoria,
         precio,
+        tipo: form.tipo || 'Sellado',
         precio_compra: parseFloat(form.precio_compra) || 0,
         stock: parseInt(form.stock) || 0,
         activo: true,
@@ -220,6 +221,16 @@ export default function Configuracion() {
                     <option>Accesorio</option>
                   </select>
                 </div>
+                <div style={{ minWidth: '120px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tipo</label>
+                  <select value={form.tipo || 'Sellado'} onChange={e => setForm({ ...form, tipo: e.target.value })} style={{ fontSize: '13px' }}>
+                    <option>Sellado</option>
+                    <option>Decant 3ml</option>
+                    <option>Decant 5ml</option>
+                    <option>Decant 10ml</option>
+                    <option>Decant 30ml</option>
+                  </select>
+                </div>
                 <div style={{ minWidth: '100px' }}>
                   <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Costo S/</label>
                   <input
@@ -277,6 +288,7 @@ export default function Configuracion() {
                   <tr style={{ background: 'var(--surface-raised)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
                     <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 500 }}>Producto</th>
                     <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 500 }}>Categoría</th>
+                    <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 500 }}>Tipo</th>
                     <th style={{ textAlign: 'right', padding: '10px 16px', fontWeight: 500 }}>Costo</th>
                     <th style={{ textAlign: 'right', padding: '10px 16px', fontWeight: 500 }}>Venta</th>
                     <th style={{ textAlign: 'right', padding: '10px 16px', fontWeight: 500 }}>Ganancia</th>
@@ -292,6 +304,7 @@ export default function Configuracion() {
                         {p.nombre}
                       </td>
                       <td style={{ padding: '11px 16px', fontSize: '12px', color: 'var(--text-secondary)' }}>{p.categoria}</td>
+                      <td style={{ padding: '11px 16px', fontSize: '12px', color: 'var(--text-secondary)' }}>{p.tipo || 'Sellado'}</td>
                       <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: '13px', color: 'var(--text-secondary)' }}>
                         S/ {Number(p.precio_compra || 0).toFixed(2)}
                       </td>
