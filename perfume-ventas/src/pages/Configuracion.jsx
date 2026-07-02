@@ -115,11 +115,31 @@ export default function Configuracion() {
   }
 
   // --- VENTAS ---
+  const [editandoVenta, setEditandoVenta] = useState(null)
+  const [formVenta, setFormVenta] = useState({})
+
   async function eliminarVenta(id) {
     if (!confirm('¿Eliminar esta venta? Esta acción no se puede deshacer.')) return
     const { error } = await supabase.from('ventas').delete().eq('id', id)
     if (error) { toast.error('Error eliminando venta'); return }
     toast.success('Venta eliminada')
+    cargarVentas()
+  }
+
+  function iniciarEdicionVenta(v) {
+    setEditandoVenta(v.id)
+    setFormVenta({ metodo_pago: v.metodo_pago, notas: v.notas || '', total: v.total })
+  }
+
+  async function guardarEdicionVenta() {
+    const { error } = await supabase.from('ventas').update({
+      metodo_pago: formVenta.metodo_pago,
+      notas: formVenta.notas || null,
+      total: parseFloat(formVenta.total) || 0,
+    }).eq('id', editandoVenta)
+    if (error) { toast.error('Error actualizando venta'); return }
+    toast.success('Venta actualizada')
+    setEditandoVenta(null)
     cargarVentas()
   }
 
@@ -392,12 +412,47 @@ export default function Configuracion() {
                       </div>
                       <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--gold)', flexShrink: 0 }}>S/ {Number(v.total).toFixed(2)}</span>
                     </div>
-                    <button
-                      onClick={() => eliminarVenta(v.id)}
-                      style={{ background: 'var(--danger)', color: 'white', padding: '9px', borderRadius: 'var(--radius-sm)', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', fontWeight: 600 }}
-                    >
-                      <Trash2 size={14} /> Eliminar venta
-                    </button>
+
+                    {/* Formulario edición */}
+                    {editandoVenta === v.id ? (
+                      <div style={{ background: 'var(--surface-raised)', borderRadius: 'var(--radius-sm)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                          <div>
+                            <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>Método de pago</label>
+                            <select value={formVenta.metodo_pago} onChange={e => setFormVenta({...formVenta, metodo_pago: e.target.value})} style={{ fontSize: '13px' }}>
+                              <option>Efectivo</option>
+                              <option>Yape/Plin</option>
+                              <option>Transferencia</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>Total S/</label>
+                            <input type="number" value={formVenta.total} onChange={e => setFormVenta({...formVenta, total: e.target.value})} style={{ fontSize: '13px' }} min="0" step="0.01" />
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>Notas</label>
+                          <input value={formVenta.notas} onChange={e => setFormVenta({...formVenta, notas: e.target.value})} placeholder="Opcional..." style={{ fontSize: '13px' }} />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                          <button onClick={guardarEdicionVenta} style={{ padding: '9px', background: 'var(--gold)', color: 'var(--obsidian)', borderRadius: 'var(--radius-sm)', fontSize: '13px', fontWeight: 700 }}>
+                            ✓ Guardar
+                          </button>
+                          <button onClick={() => setEditandoVenta(null)} style={{ padding: '9px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 'var(--radius-sm)', fontSize: '13px' }}>
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <button onClick={() => iniciarEdicionVenta(v)} style={{ padding: '9px', background: 'var(--surface-raised)', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 'var(--radius-sm)', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                          ✏️ Editar
+                        </button>
+                        <button onClick={() => eliminarVenta(v.id)} style={{ background: 'var(--danger)', color: 'white', padding: '9px', borderRadius: 'var(--radius-sm)', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 600 }}>
+                          <Trash2 size={14} /> Eliminar
+                        </button>
+                      </div>
+                    )}
                   </div>
                   {v.venta_items?.length > 0 && (
                     <div style={{ borderTop: '1px solid var(--border)', padding: '10px 16px', fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -417,3 +472,4 @@ export default function Configuracion() {
     </div>
   )
 }
+
