@@ -13,6 +13,7 @@ export default function NuevaVenta() {
   const [notas, setNotas] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todos')
+  const [tipoFiltro, setTipoFiltro] = useState('Todos')
   const [editandoDescuento, setEditandoDescuento] = useState(null)
   const [descuentoGlobal, setDescuentoGlobal] = useState('')
   const [mostrarCarrito, setMostrarCarrito] = useState(false)
@@ -27,11 +28,13 @@ export default function NuevaVenta() {
     setProductos(data || [])
   }
 
+  const TIPOS = ['Todos', 'Sellado', 'Decant 3ml', 'Decant 5ml', 'Decant 10ml', 'Decant 30ml']
   const categorias = ['Todos', ...new Set(productos.map(p => p.categoria))]
   const productosFiltrados = productos.filter(p => {
     const matchTexto = p.nombre.toLowerCase().includes(filtro.toLowerCase())
     const matchCat = categoriaFiltro === 'Todos' || p.categoria === categoriaFiltro
-    return matchTexto && matchCat
+    const matchTipo = tipoFiltro === 'Todos' || (p.tipo || 'Sellado') === tipoFiltro
+    return matchTexto && matchCat && matchTipo
   })
 
   function agregarAlCarrito(producto) {
@@ -315,13 +318,20 @@ export default function NuevaVenta() {
                 </button>
               ))}
             </div>
+            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+              {TIPOS.map(tipo => (
+                <button key={tipo} onClick={() => setTipoFiltro(tipo)} style={{ padding: '7px 12px', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontWeight: 500, background: tipoFiltro === tipo ? '#5a4aaf' : 'var(--surface)', color: tipoFiltro === tipo ? 'white' : 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                  {tipo}
+                </button>
+              ))}
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px' }}>
             {productosFiltrados.map(producto => {
               const enCarrito = carrito.find(item => item.producto.id === producto.id)
               return (
                 <button key={producto.id} onClick={() => agregarAlCarrito(producto)} style={{ background: enCarrito ? 'var(--gold-glow)' : 'var(--surface)', border: `1px solid ${enCarrito ? 'var(--gold-dim)' : 'var(--border)'}`, borderRadius: 'var(--radius)', padding: '12px', textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', position: 'relative' }}>
-                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>{producto.categoria}</div>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>{producto.tipo ? `${producto.categoria} · ${producto.tipo}` : producto.categoria}</div>
                   <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px', lineHeight: 1.4 }}>{producto.nombre}</div>
                   <div style={{ fontSize: '14px', color: 'var(--gold)', fontWeight: 600 }}>S/ {producto.precio.toFixed(2)}</div>
                   <div style={{ fontSize: '10px', marginTop: '3px', color: producto.stock === 0 ? 'var(--danger)' : producto.stock <= 3 ? 'var(--warning)' : 'var(--text-muted)' }}>
@@ -363,7 +373,7 @@ export default function NuevaVenta() {
             const enCarrito = carrito.find(item => item.producto.id === producto.id)
             return (
               <button key={producto.id} onClick={() => agregarAlCarrito(producto)} style={{ background: enCarrito ? 'var(--gold-glow)' : 'var(--surface)', border: `1px solid ${enCarrito ? 'var(--gold-dim)' : 'var(--border)'}`, borderRadius: 'var(--radius)', padding: '12px', textAlign: 'left', cursor: 'pointer', position: 'relative' }}>
-                <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>{producto.categoria}</div>
+                <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '4px' }}>{producto.tipo ? `${producto.categoria} · ${producto.tipo}` : producto.categoria}</div>
                 <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '5px', lineHeight: 1.3 }}>{producto.nombre}</div>
                 <div style={{ fontSize: '14px', color: 'var(--gold)', fontWeight: 700 }}>S/ {producto.precio.toFixed(2)}</div>
                 <div style={{ fontSize: '10px', marginTop: '3px', color: producto.stock === 0 ? 'var(--danger)' : producto.stock <= 3 ? 'var(--warning)' : 'var(--text-muted)' }}>
