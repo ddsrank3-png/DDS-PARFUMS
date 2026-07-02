@@ -271,8 +271,8 @@ export default function Configuracion() {
           {cargando ? (
             <div style={{ color: 'var(--text-muted)', padding: '20px' }}>Cargando...</div>
           ) : (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '580px' }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-raised)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
                     <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 500 }}>Producto</th>
@@ -367,21 +367,23 @@ export default function Configuracion() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {ventas.map((v, idx) => (
                 <div key={v.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                  <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>#{ventas.length - idx}</span>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: '13px', fontWeight: 500 }}>{v.metodo_pago}</span>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '10px' }}>
-                        {v.venta_items?.length || 0} items
-                        {v.notas && ` · ${v.notas}`}
-                      </span>
+                  <div style={{ padding: '13px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>#{ventas.length - idx}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: '13px', fontWeight: 500 }}>{v.metodo_pago}</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                          {v.venta_items?.length || 0} items
+                          {v.notas && ` · ${v.notas}`}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--gold)', flexShrink: 0 }}>S/ {Number(v.total).toFixed(2)}</span>
                     </div>
-                    <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--gold)' }}>S/ {Number(v.total).toFixed(2)}</span>
                     <button
                       onClick={() => eliminarVenta(v.id)}
-                      style={{ background: 'var(--danger)', color: 'white', padding: '7px 12px', borderRadius: 'var(--radius-sm)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
+                      style={{ background: 'var(--danger)', color: 'white', padding: '9px', borderRadius: 'var(--radius-sm)', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', fontWeight: 600 }}
                     >
-                      <Trash2 size={13} /> Eliminar
+                      <Trash2 size={14} /> Eliminar venta
                     </button>
                   </div>
                   {v.venta_items?.length > 0 && (
