@@ -9,9 +9,9 @@ const TIPOS = ['Todos', 'Sellado', 'Decant 3ml', 'Decant 5ml', 'Decant 10ml', 'D
 // ── CarritoPanel FUERA del componente principal para evitar re-mounts ──
 function CarritoPanel({
   carrito, total, totalOriginal, totalItems, descuentoGlobal,
-  editandoDescuento, metodoPago, notas, guardando,
+  editandoDescuento, metodoPago, notas, fechaVenta, guardando,
   onQuitarItem, onCambiarCantidad, onAplicarDescuento, onPrecioManual,
-  onDescuentoGlobal, onLimpiarDescuento, onMetodoPago, onNotas,
+  onDescuentoGlobal, onLimpiarDescuento, onMetodoPago, onNotas, onFecha,
   onToggleDescuento, onRegistrar,
 }) {
   const totalDescuentos = totalOriginal - total
@@ -125,6 +125,21 @@ function CarritoPanel({
             </div>
           </div>
 
+          <div style={{ marginBottom: '10px' }}>
+            <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha de venta</label>
+            <input
+              type="date"
+              value={fechaVenta}
+              onChange={e => onFecha(e.target.value)}
+              style={{ fontSize: '13px', width: '100%' }}
+            />
+            {fechaVenta !== new Date().toISOString().split('T')[0] && (
+              <div style={{ fontSize: '11px', color: 'var(--warning)', marginTop: '4px' }}>
+                ⚠ Registrando venta en fecha pasada
+              </div>
+            )}
+          </div>
+
           <textarea placeholder="Notas (opcional)..." value={notas} onChange={e => onNotas(e.target.value)} rows={2} style={{ fontSize: '12px', marginBottom: '10px', resize: 'none' }} />
 
           <button onClick={onRegistrar} disabled={guardando} style={{ width: '100%', padding: '13px', background: guardando ? 'var(--gold-dim)' : 'var(--gold)', color: 'var(--obsidian)', borderRadius: 'var(--radius)', fontWeight: 700, fontSize: '14px', letterSpacing: '0.03em' }}>
@@ -142,6 +157,7 @@ export default function NuevaVenta() {
   const [carrito, setCarrito] = useState([])
   const [metodoPago, setMetodoPago] = useState('Efectivo')
   const [notas, setNotas] = useState('')
+  const [fechaVenta, setFechaVenta] = useState(new Date().toISOString().split('T')[0])
   const [guardando, setGuardando] = useState(false)
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todos')
   const [tipoFiltro, setTipoFiltro] = useState('Todos')
@@ -243,7 +259,7 @@ export default function NuevaVenta() {
     setGuardando(true)
     try {
       const { data: ventaData, error: ventaError } = await supabase.from('ventas')
-        .insert({ metodo_pago: metodoPago, notas: notas || null, total, fecha: new Date().toISOString().split('T')[0] })
+        .insert({ metodo_pago: metodoPago, notas: notas || null, total, fecha: fechaVenta })
         .select().single()
       if (ventaError) throw ventaError
 
@@ -273,6 +289,7 @@ export default function NuevaVenta() {
       setNotas('')
       setMetodoPago('Efectivo')
       setDescuentoGlobal('')
+      setFechaVenta(new Date().toISOString().split('T')[0])
       setMostrarCarrito(false)
       cargarProductos()
     } catch (err) {
@@ -284,7 +301,7 @@ export default function NuevaVenta() {
 
   const carritoProps = {
     carrito, total, totalOriginal, totalItems, descuentoGlobal,
-    editandoDescuento, metodoPago, notas, guardando,
+    editandoDescuento, metodoPago, notas, fechaVenta, guardando,
     onQuitarItem: quitarDelCarrito,
     onCambiarCantidad: cambiarCantidad,
     onAplicarDescuento: aplicarDescuento,
@@ -293,6 +310,7 @@ export default function NuevaVenta() {
     onLimpiarDescuento: () => aplicarDescuentoGlobal(''),
     onMetodoPago: setMetodoPago,
     onNotas: setNotas,
+    onFecha: setFechaVenta,
     onToggleDescuento: toggleDescuento,
     onRegistrar: registrarVenta,
   }
