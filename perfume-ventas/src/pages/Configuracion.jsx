@@ -10,15 +10,15 @@ export default function Configuracion() {
 
   // Estado formulario nuevo/editar producto
   const [editando, setEditando] = useState(null)
-  const [form, setForm] = useState({
-    nombre: '', categoria: 'Decant', precio_compra: '',
-    // Precios por talla (vacío = no crear esa talla)
-    precio_sellado: '', stock_sellado: '',
-    precio_3ml: '', stock_3ml: '',
-    precio_5ml: '', stock_5ml: '',
-    precio_10ml: '', stock_10ml: '',
-    precio_30ml: '', stock_30ml: '',
-  })
+  const FORM_INICIAL = {
+    nombre: '',
+    precio_sellado: '', stock_sellado: '', costo_sellado: '', cat_sellado: 'Perfume',
+    precio_3ml: '', stock_3ml: '', costo_3ml: '', cat_3ml: 'Decant',
+    precio_5ml: '', stock_5ml: '', costo_5ml: '', cat_5ml: 'Decant',
+    precio_10ml: '', stock_10ml: '', costo_10ml: '', cat_10ml: 'Decant',
+    precio_30ml: '', stock_30ml: '', costo_30ml: '', cat_30ml: 'Decant',
+  }
+  const [form, setForm] = useState({ ...FORM_INICIAL })
 
   // Ventas para editar
   const [ventas, setVentas] = useState([])
@@ -52,39 +52,30 @@ export default function Configuracion() {
 
   // --- PRODUCTOS ---
   function iniciarNuevo() {
-    setForm({
-      nombre: '', categoria: 'Decant', precio_compra: '',
-      precio_sellado: '', stock_sellado: '',
-      precio_3ml: '', stock_3ml: '',
-      precio_5ml: '', stock_5ml: '',
-      precio_10ml: '', stock_10ml: '',
-      precio_30ml: '', stock_30ml: '',
-    })
+    setForm({ ...FORM_INICIAL })
     setEditando('nuevo')
   }
 
   function iniciarEdicion(producto) {
-    // Para edición mantenemos el formulario simple por talla individual
+    const key = producto.tipo === 'Sellado' ? 'sellado'
+      : producto.tipo === 'Decant 3ml' ? '3ml'
+      : producto.tipo === 'Decant 5ml' ? '5ml'
+      : producto.tipo === 'Decant 10ml' ? '10ml'
+      : '30ml'
     setForm({
-      nombre: producto.nombre, categoria: producto.categoria,
-      precio_compra: producto.precio_compra || '',
-      precio_sellado: producto.tipo === 'Sellado' ? producto.precio : '',
-      stock_sellado: producto.tipo === 'Sellado' ? producto.stock : '',
-      precio_3ml: producto.tipo === 'Decant 3ml' ? producto.precio : '',
-      stock_3ml: producto.tipo === 'Decant 3ml' ? producto.stock : '',
-      precio_5ml: producto.tipo === 'Decant 5ml' ? producto.precio : '',
-      stock_5ml: producto.tipo === 'Decant 5ml' ? producto.stock : '',
-      precio_10ml: producto.tipo === 'Decant 10ml' ? producto.precio : '',
-      stock_10ml: producto.tipo === 'Decant 10ml' ? producto.stock : '',
-      precio_30ml: producto.tipo === 'Decant 30ml' ? producto.precio : '',
-      stock_30ml: producto.tipo === 'Decant 30ml' ? producto.stock : '',
+      ...FORM_INICIAL,
+      nombre: producto.nombre,
+      [`precio_${key}`]: producto.precio,
+      [`stock_${key}`]: producto.stock || '',
+      [`costo_${key}`]: producto.precio_compra || '',
+      [`cat_${key}`]: producto.categoria || 'Decant',
     })
     setEditando(producto.id)
   }
 
   function cancelarEdicion() {
     setEditando(null)
-    setForm({ nombre: '', categoria: 'Decant', precio_compra: '', precio_sellado: '', stock_sellado: '', precio_3ml: '', stock_3ml: '', precio_5ml: '', stock_5ml: '', precio_10ml: '', stock_10ml: '', precio_30ml: '', stock_30ml: '' })
+    setForm({ ...FORM_INICIAL })
   }
 
   async function guardarProducto() {
@@ -112,10 +103,10 @@ export default function Configuracion() {
 
       const inserts = tallasACrear.map(t => ({
         nombre: form.nombre.trim(),
-        categoria: form.categoria,
+        categoria: form[`cat_${t.key}`] || 'Decant',
         tipo: t.tipo,
         precio: parseFloat(form[`precio_${t.key}`]),
-        precio_compra: parseFloat(form.precio_compra) || 0,
+        precio_compra: parseFloat(form[`costo_${t.key}`]) || 0,
         stock: parseInt(form[`stock_${t.key}`]) || 0,
         activo: true,
       }))
@@ -130,10 +121,10 @@ export default function Configuracion() {
       const precio = parseFloat(form[`precio_${talla.key}`])
       const { error } = await supabase.from('productos').update({
         nombre: form.nombre.trim(),
-        categoria: form.categoria,
+        categoria: form[`cat_${talla.key}`] || 'Decant',
         tipo: talla.tipo,
         precio,
-        precio_compra: parseFloat(form.precio_compra) || 0,
+        precio_compra: parseFloat(form[`costo_${talla.key}`]) || 0,
         stock: parseInt(form[`stock_${talla.key}`]) || 0,
       }).eq('id', editando)
       if (error) { toast.error('Error actualizando producto'); return }
@@ -262,47 +253,54 @@ export default function Configuracion() {
               <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '14px', color: 'var(--gold)' }}>
                 {editando === 'nuevo' ? '✨ Nuevo producto — agrega los precios por talla' : 'Editar producto'}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '10px', marginBottom: '14px', alignItems: 'end' }}>
-                <div>
-                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Nombre del perfume</label>
-                  <input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Khamrah Clasico" style={{ fontSize: '13px' }} autoFocus />
-                </div>
-                <div style={{ minWidth: '110px' }}>
-                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Categoría</label>
-                  <select value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} style={{ fontSize: '13px' }}>
-                    <option>Decant</option>
-                    <option>Perfume</option>
-                    <option>Accesorio</option>
-                  </select>
-                </div>
-                <div style={{ minWidth: '100px' }}>
-                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Costo prom. S/</label>
-                  <input type="number" value={form.precio_compra} onChange={e => setForm({ ...form, precio_compra: e.target.value })} placeholder="0.00" min="0" step="0.50" style={{ fontSize: '13px' }} />
-                </div>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Nombre del perfume</label>
+                <input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Khamrah Clasico" style={{ fontSize: '13px' }} autoFocus />
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-                Precios y stock por talla — deja vacío lo que no vendas
+                Tallas — deja vacío el precio de lo que no vendas
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-                {[
-                  { key: 'sellado', label: '🏷 Sellado' },
-                  { key: '3ml', label: '💧 Decant 3ml' },
-                  { key: '5ml', label: '💧 Decant 5ml' },
-                  { key: '10ml', label: '💧 Decant 10ml' },
-                  { key: '30ml', label: '💧 Decant 30ml' },
-                ].map(({ key, label }) => (
-                  <div key={key} style={{ display: 'grid', gridTemplateColumns: '130px 1fr 1fr', gap: '8px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 500 }}>{label}</span>
-                    <div>
-                      <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Precio venta S/</label>
-                      <input type="number" value={form[`precio_${key}`]} onChange={e => setForm({ ...form, [`precio_${key}`]: e.target.value })} placeholder="—" min="0" step="0.50" style={{ fontSize: '13px', padding: '6px 8px' }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Stock</label>
-                      <input type="number" value={form[`stock_${key}`]} onChange={e => setForm({ ...form, [`stock_${key}`]: e.target.value })} placeholder="0" min="0" style={{ fontSize: '13px', padding: '6px 8px' }} disabled={!form[`precio_${key}`]} />
-                    </div>
-                  </div>
-                ))}
+              <div style={{ overflowX: 'auto', marginBottom: '14px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '520px' }}>
+                  <thead>
+                    <tr style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500, width: '110px' }}>Talla</th>
+                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500 }}>Categoría</th>
+                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500 }}>Costo S/</th>
+                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500 }}>Precio venta S/</th>
+                      <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500 }}>Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { key: 'sellado', label: '🏷 Sellado' },
+                      { key: '3ml', label: '💧 3ml' },
+                      { key: '5ml', label: '💧 5ml' },
+                      { key: '10ml', label: '💧 10ml' },
+                      { key: '30ml', label: '💧 30ml' },
+                    ].map(({ key, label }) => (
+                      <tr key={key} style={{ borderTop: '1px solid var(--border)' }}>
+                        <td style={{ padding: '6px 8px', fontSize: '13px', fontWeight: 500 }}>{label}</td>
+                        <td style={{ padding: '6px 8px' }}>
+                          <select value={form[`cat_${key}`]} onChange={e => setForm({ ...form, [`cat_${key}`]: e.target.value })} style={{ fontSize: '12px', padding: '5px 6px' }}>
+                            <option>Decant</option>
+                            <option>Perfume</option>
+                            <option>Accesorio</option>
+                          </select>
+                        </td>
+                        <td style={{ padding: '6px 8px' }}>
+                          <input type="number" value={form[`costo_${key}`]} onChange={e => setForm({ ...form, [`costo_${key}`]: e.target.value })} placeholder="0.00" min="0" step="0.50" style={{ fontSize: '12px', padding: '5px 6px', width: '80px' }} disabled={!form[`precio_${key}`]} />
+                        </td>
+                        <td style={{ padding: '6px 8px' }}>
+                          <input type="number" value={form[`precio_${key}`]} onChange={e => setForm({ ...form, [`precio_${key}`]: e.target.value })} placeholder="—" min="0" step="0.50" style={{ fontSize: '12px', padding: '5px 6px', width: '80px' }} />
+                        </td>
+                        <td style={{ padding: '6px 8px' }}>
+                          <input type="number" value={form[`stock_${key}`]} onChange={e => setForm({ ...form, [`stock_${key}`]: e.target.value })} placeholder="0" min="0" style={{ fontSize: '12px', padding: '5px 6px', width: '70px' }} disabled={!form[`precio_${key}`]} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={guardarProducto} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 14px', background: 'var(--gold)', color: 'var(--obsidian)', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontWeight: 600 }}>
