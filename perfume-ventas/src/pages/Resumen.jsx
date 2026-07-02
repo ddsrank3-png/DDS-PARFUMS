@@ -118,10 +118,9 @@ export default function Resumen() {
       ) : (
         <>
           {/* KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '16px' }}>
             {[
               { icon: TrendingUp, label: 'Ingresos totales', value: `S/ ${totalIngresos.toFixed(2)}`, color: 'var(--gold)' },
-              { icon: Package, label: 'Ganancia neta', value: `S/ ${totalGanancia.toFixed(2)}`, color: totalGanancia >= 0 ? 'var(--success)' : 'var(--danger)' },
               { icon: Package, label: 'Costo productos', value: `S/ ${totalCosto.toFixed(2)}`, color: 'var(--text-secondary)' },
               { icon: Tag, label: 'Gastos operativos', value: `S/ ${totalGastosOp.toFixed(2)}`, color: 'var(--danger)' },
               { icon: Package, label: 'Transacciones', value: totalTransacciones, color: 'var(--text-primary)' },
@@ -135,6 +134,33 @@ export default function Resumen() {
                 <div style={{ fontSize: '22px', fontWeight: 700, color }}>{value}</div>
               </div>
             ))}
+          </div>
+
+          {/* Cuadro resumen neto */}
+          <div style={{ background: totalGanancia >= 0 ? 'rgba(76,175,125,0.08)' : 'rgba(224,92,92,0.08)', border: `1px solid ${totalGanancia >= 0 ? 'rgba(76,175,125,0.3)' : 'rgba(224,92,92,0.3)'}`, borderRadius: 'var(--radius)', padding: '20px 24px', marginBottom: '28px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', fontWeight: 500 }}>
+              Desglose — Ganancia neta
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Ingresos totales</span>
+                <span style={{ color: 'var(--gold)', fontWeight: 600 }}>+ S/ {totalIngresos.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Costo de productos</span>
+                <span style={{ color: 'var(--danger)' }}>- S/ {totalCosto.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Gastos operativos</span>
+                <span style={{ color: 'var(--danger)' }}>- S/ {totalGastosOp.toFixed(2)}</span>
+              </div>
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '15px', fontWeight: 700 }}>Ganancia neta</span>
+                <span style={{ fontSize: '26px', fontWeight: 800, color: totalGanancia >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  S/ {totalGanancia.toFixed(2)}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Por método de pago */}
